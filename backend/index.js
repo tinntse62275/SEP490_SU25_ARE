@@ -8,6 +8,7 @@ import authRouter from "./router/auth.js";
 
 dotenv.config(); // Load biến môi trường từ .env
 
+const corsMiddleware = require("./middleware/cors")
 const app = express();
 const PORT = process.env.PORT || 5000;
 

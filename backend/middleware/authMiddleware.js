@@ -5,9 +5,9 @@ const verifyUser = async (req, res, next) => {
     try {
         // Extract token from headers
         const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
-        
+
         if (!token) {
-            
+
             return res.status(400).json({ success: false, error: "Token not provided" });
         }
 
