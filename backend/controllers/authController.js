@@ -206,5 +206,67 @@ const googleAuth = async (req, res) => {
 }
 
 
-export { login, register, verifynormal, googleAuth };
+const googleCallback = async (req, res) => {
+  try {
+    const { code } = req.body
+
+    // Exchange authorization code for tokens
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: `${process.env.CLIENT_URL}/auth/google/callback`,
+      }),
+    })
+
+    const tokens = await tokenResponse.json()
+
+    // Get user info from Google
+    const userResponse = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${tokens.access_token}`)
+    const googleUser = await userResponse.json()
+
+    // Use your existing logic to create/find user
+    let user = await User.findOne({ googleId: googleUser.id })
+
+    if (!user) {
+      user = await User.findOne({ email: googleUser.email })
+      if (user) {
+        user.googleId = googleUser.id
+        await user.save()
+      } else {
+        const randomPassword = Math.random().toString(36).slice(-8)
+        const hashedPassword = await bcrypt.hash(randomPassword, 10)
+
+        user = new User({
+          name: googleUser.name,
+          email: googleUser.email,
+          password: hashedPassword,
+          googleId: googleUser.id,
+          role: "customer",
+          isOnline: true,
+        })
+        await user.save()
+      }
+    }
+
+    const jwtToken = jwt.sign({ _id: user._id, role: user.role, name: user.name }, process.env.JWT_SECRET, {
+      expiresIn: "10d",
+    })
+
+    return res.status(200).json({
+      success: true,
+      token: jwtToken,
+      user: { _id: user._id, name: user.name, role: user.role },
+      isOnline: user.isOnline,
+    })
+  } catch (error) {
+    console.error("Google callback error:", error)
+    return res.status(500).json({ success: false, error: error.message })
+  }
+}
+export { login, register, verifynormal, googleAuth, googleCallback };
 

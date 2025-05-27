@@ -8,7 +8,6 @@ import authRouter from "./router/auth.js";
 
 dotenv.config(); // Load biến môi trường từ .env
 
-const corsMiddleware = require("./middleware/cors")
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -20,10 +19,19 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-// Middleware
+// Middleware (ORDER MATTERS!)
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
+
+// Log Every Request - MOVE THIS BEFORE ROUTES
+app.use((req, res, next) => {
+  console.log(`📨 ${req.method} ${req.url} - ${new Date().toISOString()}`)
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log('📝 Request body:', req.body)
+  }
+  next()
+})
 
 // Route kiểm tra
 app.get("/", (req, res) => res.send("API working"));

@@ -11,7 +11,7 @@ import Home from "./home/home";
 // import Dashboard from "./pages/dashboard.jsx"; // Giả sử đây là trang chỉ dành cho admin
 import Login from "./pages/login.jsx";
 import Register from "./pages/register.jsx";
-
+import GoogleCallback from "./pages/google-callback.jsx";
 // Component bảo vệ route (chặn người chưa login, hoặc không đủ quyền)
 function ProtectedRoute({ element, allowedRoles }) {
   const { user } = useAuth();
@@ -31,7 +31,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
-
+          <Route path="/google/callback" element={<GoogleCallback />} />
           {/* Route được bảo vệ (chỉ admin mới vào được) */}
           {/* <Route
             path="/dashboard"
